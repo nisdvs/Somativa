@@ -1,0 +1,91 @@
+CONSULTAS:
+Crie uma consulta que mostre todas as tarefas ainda não iniciadas com as informações de seus
+respectivos envolvidos no processo;
+
+select * from tarefas where id not in(select t.id from tarefas t join tarefa_status ts on t.id = ts.tarefaFK);
+
+• Crie uma consulta que mostre todos os locais que tiveram associação a mais de duas tarefas;
+
+select l.*, count(*) from locais l join tarefas t on l.id = t.localFK group by t.localFK having count(l.id)>2;
+
+• Crie uma consulta que mostre todos os usuários que tiveram associação a duas tarefas no mínimo;
+
+select u.*,count(*) from tarefas t join tarefas_responsaveis r on t.id = r.tarefaFK join usuarios u on r.responsavelFK = u.id group by u.id having count(u.id)>=2;
+
+
+• Crie uma consulta que mostre todos eventos que ainda acontecerão e as tarefas que ainda não
+foram executadas nos locais destes eventos (essa consulta ajudará a gestão visualizar se há algum
+problema que pode impactar os eventos);
+
+select e.*,t.* from tarefas t join locais l on t.localFK = l.id join eventos e on l.id = e.localFK join tarefa_status ts on t.id = ts.tarefaFK
+where e.inicio > now() and ts.status != 'Encerrada' group by e.id,t.id;
+
+• Crie uma consulta que mostre os locais e a quantidade de tarefas existentes (independente do
+status);
+
+select l.*, count(*) from locais l join tarefas t on l.id = t.localFK group by l.id;
+
+• Crie uma consulta que mostre os locais e a quantidade de tarefas concluídas;
+
+select l.*, count(*) from locais l join tarefas t on l.id = t.localFK join tarefa_status ts on t.id = ts.tarefaFK where ts.status = 'Encerrada' group by l.id;
+
+• Crie uma consulta que mostre os usuários e quantas tarefas possuem atribuídas (independente do status)
+
+select u.*,count(*) from usuarios u join tarefas_responsaveis tr on u.id = tr.responsavelFK group by u.id;
+
+• Crie uma consulta que mostre os usuários e quantas tarefas possuem atribuídas concluídas;
+
+select u.*,count(*) from usuarios u join tarefas_responsaveis tr on u.id = tr.responsavelFK join tarefas t on tr.tarefaFK = t.id join tarefa_status ts on t.id = ts.tarefaFK where ts.status = 'Encerrada' group by u.id;
+
+• Crie uma consulta que mostre a média por mês de quantas tarefas são criadas por local;
+
+select *, AVG(d.qnt) from locais l join (select localFK, month(dataAbertura)as mes,count(*) as qnt from tarefas group by mes,localFK) d on l.id = d.localFK group by d.mes,l.id;
+
+
+
+
+
+CREATE TABLE Users (
+  user_id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(255),
+  email VARCHAR(255),
+  phone VARCHAR(255),
+  photo_link VARCHAR(255)
+);
+
+CREATE TABLE Tasks (
+  task_id INT PRIMARY KEY AUTO_INCREMENT,
+  task_name VARCHAR(255),
+  description TEXT,
+  deadline DATE,
+  start_date DATE,
+  end_date DATE,
+  environment VARCHAR(255),
+  requester_id INT,
+  status VARCHAR(255),
+  FOREIGN KEY (requester_id) REFERENCES Users(user_id)
+);
+
+CREATE TABLE TaskResponsibles (
+  task_id INT,
+  user_id INT,
+  FOREIGN KEY (task_id) REFERENCES Tasks(task_id),
+  FOREIGN KEY (user_id) REFERENCES Users(user_id)
+);
+
+CREATE TABLE TaskHistory (
+  history_id INT PRIMARY KEY AUTO_INCREMENT,
+  task_id INT,
+  status VARCHAR(255),
+  comment TEXT,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (task_id) REFERENCES Tasks(task_id)
+);
+
+CREATE TABLE TaskPhotos (
+  photo_id INT PRIMARY KEY AUTO_INCREMENT,
+  task_id INT,
+  photo_link VARCHAR(255),
+  FOREIGN KEY (task_id) REFERENCES Tasks(task_id)
+);
+
